@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import StudentAssignment from '../models/StudentAssignment.js';
 import Assignment from '../models/Assignment.js';
 import QuizAttempt from '../models/QuizAttempt.js';
+import { buildStudentAssignmentRecords } from '../utils/assignmentVisibility.js';
 
 // @desc    Auth user & get token (Login)
 // @route   POST /api/users/login
@@ -174,6 +175,34 @@ const updateUserStatus = asyncHandler(async (req, res) => {
   ).select('-password');
 
   if (updatedUser) {
+    if (updatedUser.isApproved && updatedUser.role === 'student') {
+      const existingAssignments = await Assignment.find({ isActive: true }).select('_id');
+
+      if (existingAssignments.length) {
+        const existingStudentAssignmentIds = await StudentAssignment.find({
+          studentId: updatedUser._id,
+          assignmentId: { $in: existingAssignments.map((assignment) => assignment._id) },
+        }).select('assignmentId');
+
+        const existingAssignmentIdSet = new Set(
+          existingStudentAssignmentIds.map((item) => item.assignmentId.toString())
+        );
+
+        const missingAssignmentIds = existingAssignments
+          .filter((assignment) => !existingAssignmentIdSet.has(assignment._id.toString()))
+          .map((assignment) => assignment._id);
+
+        if (missingAssignmentIds.length) {
+          const studentAssignmentRecords = buildStudentAssignmentRecords(
+            missingAssignmentIds,
+            [updatedUser._id]
+          );
+
+          await StudentAssignment.insertMany(studentAssignmentRecords);
+        }
+      }
+    }
+
     res.json({
       _id: updatedUser._id,
       firstName: updatedUser.firstName,

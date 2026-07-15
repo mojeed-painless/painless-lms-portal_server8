@@ -2,6 +2,7 @@ import asyncHandler from 'express-async-handler';
 import Assignment from '../models/Assignment.js';
 import StudentAssignment from '../models/StudentAssignment.js';
 import User from '../models/User.js';
+import { buildStudentAssignmentRecords } from '../utils/assignmentVisibility.js';
 
 // @desc    Create a new assignment
 // @route   POST /api/assignments
@@ -25,18 +26,16 @@ const createAssignment = asyncHandler(async (req, res) => {
 
   const createdAssignment = await assignment.save();
 
-  // Get all students enrolled in this course
-  // Note: You may need to adjust this based on your enrollment system
-  const students = await User.find({ role: 'student' });
+  const students = await User.find({ role: 'student', isApproved: true }).select('_id');
 
-  // Create pending assignment records for all students
-  const studentAssignments = students.map((student) => ({
-    assignmentId: createdAssignment._id,
-    studentId: student._id,
-    status: 'pending',
-  }));
+  if (students.length) {
+    const studentAssignments = buildStudentAssignmentRecords(
+      [createdAssignment._id],
+      students.map((student) => student._id)
+    );
 
-  await StudentAssignment.insertMany(studentAssignments);
+    await StudentAssignment.insertMany(studentAssignments);
+  }
 
   res.status(201).json({
     message: 'Assignment created successfully',
