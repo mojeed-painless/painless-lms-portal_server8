@@ -249,4 +249,31 @@ const getMyDailyAttempt = asyncHandler(async (req, res) => {
   res.json(attempt);
 });
 
-export { getMyDailyAttempt };
+const getMyDailyQuizSummary = asyncHandler(async (req, res) => {
+  const studentId = req.user._id;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [aggregate] = await DailyQuizAttempt.aggregate([
+    { $match: { student: studentId } },
+    {
+      $group: {
+        _id: '$student',
+        totalPoints: { $sum: '$points' },
+        totalAttempts: { $sum: 1 },
+      },
+    },
+  ]);
+
+  const todayAttempt = await DailyQuizAttempt.findOne({ student: studentId, date: today }).lean();
+
+  res.json({
+    totalPoints: aggregate?.totalPoints || 0,
+    totalAttempts: aggregate?.totalAttempts || 0,
+    todayPoints: todayAttempt?.points || 0,
+    todayScore: todayAttempt?.score || 0,
+    todayTotal: todayAttempt?.total || 0,
+    todayDate: today,
+  });
+});
+
+export { getMyDailyAttempt, getMyDailyQuizSummary };

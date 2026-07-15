@@ -1,5 +1,5 @@
 import express from 'express';
-import { createAttempt, getMyAttempts, submitBatchAttempt, getDailyLeaderboard, getDailyLeaderboardAggregate, getMyDailyAttempt, getDailySession, upsertDailySession } from '../controllers/quizAttemptController.js';
+import { createAttempt, getMyAttempts, submitBatchAttempt, getDailyLeaderboard, getDailyLeaderboardAggregate, getMyDailyAttempt, getMyDailyQuizSummary, getDailySession, upsertDailySession } from '../controllers/quizAttemptController.js';
 import { protect, admin } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
