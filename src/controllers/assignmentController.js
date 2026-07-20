@@ -3,6 +3,7 @@ import Assignment from '../models/Assignment.js';
 import StudentAssignment from '../models/StudentAssignment.js';
 import User from '../models/User.js';
 import { buildStudentAssignmentRecords } from '../utils/assignmentVisibility.js';
+import { normalizeCourseId } from '../utils/courseId.js';
 
 // @desc    Create a new assignment
 // @route   POST /api/assignments
@@ -15,10 +16,12 @@ const createAssignment = asyncHandler(async (req, res) => {
     throw new Error('Please provide title, courseId, and dueDate');
   }
 
+  const normalizedCourseId = normalizeCourseId(courseId);
+
   const assignment = new Assignment({
     title: title.trim(),
     description: description?.trim() || '',
-    courseId,
+    courseId: normalizedCourseId,
     createdBy: req.user._id,
     dueDate: new Date(dueDate),
     maxScore: maxScore || 100,
@@ -416,6 +419,7 @@ const updateAssignment = asyncHandler(async (req, res) => {
   if (description !== undefined) assignment.description = description.trim() || '';
   if (dueDate) assignment.dueDate = new Date(dueDate);
   if (maxScore !== undefined) assignment.maxScore = maxScore;
+  if (req.body.courseId !== undefined) assignment.courseId = normalizeCourseId(req.body.courseId);
 
   const updatedAssignment = await assignment.save();
 

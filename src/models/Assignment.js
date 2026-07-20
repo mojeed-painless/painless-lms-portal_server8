@@ -13,7 +13,7 @@ const assignmentSchema = mongoose.Schema(
     },
     courseId: {
       type: String,
-      enum: ['html', 'js', 'react'],
+      enum: ['html', 'css', 'js', 'react'],
       required: true,
     },
     createdBy: {
