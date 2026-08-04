@@ -15,29 +15,50 @@ import connectDB from './src/config/db.js';
 const app = express();
 
 
-
-
-
 // --- MIDDLEWARE ---
 
 const allowedOrigins = [
-  'http://localhost:5173', 
-  'https://painless-lms-portal-cohort8.vercel.app'
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  'http://0.0.0.0:5173',
+  'https://painless-lms-portal-cohort8.vercel.app',
 ];
 
 if (process.env.CLIENT_URL) {
-  allowedOrigins.push(process.env.CLIENT_URL);
+  allowedOrigins.push(process.env.CLIENT_URL.replace(/\/$/, ''));
 }
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+
+  try {
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return true;
+    }
+
+    const { hostname, protocol } = new URL(normalizedOrigin);
+    return (
+      (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') &&
+      ['http:', 'https:'].includes(protocol)
+    );
+  } catch {
+    return false;
+  }
+};
 
 const corsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'), false); 
+      callback(new Error('Not allowed by CORS'), false);
     }
   },
   credentials: true,
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
 };
 
 app.use(cors(corsOptions));
