@@ -29,6 +29,7 @@ const authUser = asyncHandler(async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
+      cohort: user.cohort,
       email: user.email,
       role: user.role,
       htmlAccess: user.htmlAccess ?? false,
@@ -53,7 +54,7 @@ const authUser = asyncHandler(async (req, res) => {
 // @route   POST /api/users/register
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { firstName, lastName, username, email, password, role } = req.body;
+  const { firstName, lastName, username, email, password, role, cohort } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -71,6 +72,7 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     password,
     role: role || 'student', 
+    cohort: cohort || null,
     isApproved: initialApprovalStatus ? true : false,
     htmlAccess: false,
     jsAccess: false,
@@ -86,6 +88,7 @@ const registerUser = asyncHandler(async (req, res) => {
       username: user.username,
       email: user.email,
       role: user.role,
+      cohort: user.cohort,
       isApproved: user.isApproved,
       htmlAccess: user.htmlAccess,
       jsAccess: user.jsAccess,
@@ -315,9 +318,36 @@ const updateProgress = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get current user's profile
+// @route   GET /api/users/profile
+// @access  Private
+const getUserProfile = asyncHandler(async (req, res) => {
+  const u = req.user;
+  if (!u) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  res.json({
+    _id: u._id,
+    firstName: u.firstName,
+    lastName: u.lastName,
+    username: u.username,
+    email: u.email,
+    role: u.role,
+    cohort: u.cohort || null,
+    isApproved: u.isApproved,
+    htmlAccess: u.htmlAccess ?? false,
+    jsAccess: u.jsAccess ?? false,
+    reactAccess: u.reactAccess ?? false,
+    completedLessons: u.completedLessons || [],
+  });
+});
+
 export { 
     authUser, 
     registerUser, 
+  getUserProfile,
     getPendingUsers, 
     updateUserStatus,
     deleteUser,

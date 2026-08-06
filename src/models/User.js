@@ -9,6 +9,7 @@ const userSchema = mongoose.Schema(
     email: { type: String, required: true, unique: true, },
     password: { type: String, required: true, },
     role: { type: String, enum: ['student', 'instructor', 'admin'], required: true, default: 'student', },
+    cohort: { type: String, default: null },
     isApproved: { type: Boolean, required: true, default: false, },
     htmlAccess: { type: Boolean, default: false, },
     jsAccess: { type: Boolean, default: false, },

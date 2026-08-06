@@ -2,6 +2,7 @@ import express from 'express';
 import { 
     authUser, 
     registerUser, 
+    getUserProfile,
     getPendingUsers, 
     updateUserStatus,
     deleteUser,
@@ -19,6 +20,9 @@ router.post('/login', authUser);
 router.post('/register', registerUser);
 
 router.use(protect);
+
+// Return current authenticated user's profile
+router.get('/profile', getUserProfile);
 
 // Aggregated grades available to any authenticated user (students + admins)
 router.route('/grades')
